@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import express from 'express';
+import express, { urlencoded, json } from 'express';
 import router from './router';
 import requestLogger from './middleware/requestLogger';
 import errorLogger from './middleware/errorLogger';
@@ -10,11 +10,10 @@ dotenv.config({
 });
 
 const port = process.env.PORT || 5000;
-// TODO
-// Add bodyparser
-
 const app = express();
 app.use(requestLogger);
+app.use(json());
+app.use(urlencoded({ extended: true }));
 app.use('/', router);
 app.use(errorLogger);
 
