@@ -15,6 +15,7 @@ const minify = async (path: string, quality: number): Promise<Buffer> => {
     plugins = [imageminJpegtran(), imageminOptipng({ optimizationLevel: 2 })];
   }
   const [{ data }] = await imagemin([path], {
+    destination: `${process.cwd()}/tmp`,
     plugins,
   });
   return data;

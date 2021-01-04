@@ -16,6 +16,7 @@ app.use(requestLogger);
 app.use(json());
 app.use(urlencoded({ extended: true }));
 app.use('/', router);
+app.use('/tmp', express.static('tmp'));
 app.use(errorLogger);
 app.use(errorHandler);
 

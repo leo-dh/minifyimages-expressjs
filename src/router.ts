@@ -16,21 +16,29 @@ router.get('/', (req, res) => {
 
 router.post('/minify', upload.single('image'), async (req, res) => {
   logger.info(`File ${req.file.originalname} Uploaded.`);
-  const filepath = `${UPLOAD_PATH}/${req.file.originalname}`;
+
+  const initialSize = req.file.size;
+  const path = req.file.path;
 
   const quality = Number(req.query.quality); // Should be in integer (0 - 100)
-  const buffer = await minify(filepath, Math.abs(quality));
+  const data = await minify(req.file.path, Math.abs(quality));
+  const finalSize = data.byteLength;
 
-  res.contentType(req.file.mimetype);
-  res.send(buffer);
-
-  unlink(filepath, (err) => {
-    if (err) {
-      logger.error(err);
-    } else {
-      logger.info(`File ${req.file.originalname} removed.`);
-    }
+  res.json({
+    initialSize,
+    finalSize,
+    url: `http://${req.headers.host}/tmp/${req.file.originalname}`,
   });
+
+  setTimeout(() => {
+    unlink(path, (err) => {
+      if (err) {
+        logger.error(err);
+      } else {
+        logger.info(`File ${path} removed.`);
+      }
+    });
+  }, 1000 * 60);
 });
 
 export default router;
