@@ -27,7 +27,8 @@ router.post('/minify', upload.single('image'), async (req, res) => {
   res.json({
     initialSize,
     finalSize,
-    url: `http://${req.headers.host}/tmp/${req.file.originalname}`,
+    url: `tmp/${req.file.originalname}`,
+    filename: req.file.originalname,
   });
 
   setTimeout(() => {
