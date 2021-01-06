@@ -1,12 +1,16 @@
 import { Router } from 'express';
-import { existsSync, mkdirSync, unlink } from 'fs';
-import logger from './utils/logger';
+import { existsSync, mkdirSync } from 'fs';
+import { randomBytes } from 'crypto';
+import mkdirp from 'mkdirp';
+import { cleanup, logger } from './utils';
 import { UPLOAD_PATH, upload } from './storage';
-import { minify } from './imageprocessing';
+import { createStaticPool, WorkerTaskType } from './workerpool';
 
 if (!existsSync(UPLOAD_PATH)) {
   mkdirSync(UPLOAD_PATH);
 }
+
+const staticPool = createStaticPool();
 
 const router = Router();
 
@@ -18,28 +22,62 @@ router.post('/minify', upload.single('image'), async (req, res) => {
   logger.info(`File ${req.file.originalname} Uploaded.`);
 
   const initialSize = req.file.size;
-  const path = req.file.path;
+  const inputPath = req.file.path;
 
   const quality = Number(req.query.quality); // Should be in integer (0 - 100)
-  const data = await minify(req.file.path, Math.abs(quality));
-  const finalSize = data.byteLength;
+  const randomString = randomBytes(4).toString('hex');
+
+  const finalSize = await staticPool.exec({
+    type: WorkerTaskType.MINIFY,
+    params: {
+      inputPath,
+      outputFolder: randomString,
+      quality: Math.abs(quality),
+    },
+  });
 
   res.json({
     initialSize,
     finalSize,
-    url: `tmp/${req.file.originalname}`,
+    url: `tmp/${randomString}/${req.file.originalname}`,
     filename: req.file.originalname,
   });
 
-  setTimeout(() => {
-    unlink(path, (err) => {
-      if (err) {
-        logger.error(err);
-      } else {
-        logger.info(`File ${path} removed.`);
-      }
-    });
-  }, 1000 * 60);
+  cleanup(inputPath, `${process.cwd()}/tmp/${randomString}`);
+});
+
+router.post('/resize', upload.single('image'), async (req, res) => {
+  logger.info(`File ${req.file.originalname} Uploaded.`);
+
+  const initialSize = req.file.size;
+  const inputPath = req.file.path;
+  const randomString = randomBytes(4).toString('hex');
+  const outputFolder = `${process.cwd()}/tmp/${randomString}`;
+  mkdirp.sync(outputFolder);
+  const outputPath = `${outputFolder}/${req.file.originalname}`;
+
+  const finalSize = await staticPool.exec({
+    type: WorkerTaskType.RESIZE,
+    params: {
+      inputPath,
+      outputPath,
+      options: {
+        percentage: req.query.percentage ? true : false,
+        height: Number(req.query.height),
+        width: Number(req.query.width),
+        quality: Number(req.query.quality),
+      },
+    },
+  });
+
+  res.json({
+    initialSize,
+    finalSize,
+    url: `tmp/${randomString}/${req.file.originalname}`,
+    filename: req.file.originalname,
+  });
+
+  cleanup(inputPath, outputFolder);
 });
 
 export default router;
