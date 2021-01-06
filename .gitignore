@@ -2,3 +2,6 @@ node_modules
 logs
 .env
 *.lock
+dist
+tmp
+*-error.log
