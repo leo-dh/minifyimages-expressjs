@@ -1,14 +1,14 @@
 import dotenv from 'dotenv';
+dotenv.config({
+  path: '.env',
+});
+
 import express, { urlencoded, json } from 'express';
 import router from './router';
 import requestLogger from './middleware/requestLogger';
 import errorLogger from './middleware/errorLogger';
 import errorHandler from './middleware/errorHandler';
-import logger from './utils/logger';
-
-dotenv.config({
-  path: '.env',
-});
+import { logger } from './utils';
 
 const port = process.env.PORT || 5000;
 const app = express();
