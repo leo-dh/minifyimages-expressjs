@@ -2,12 +2,14 @@ import { Router } from 'express';
 import { existsSync, mkdirSync } from 'fs';
 import { randomBytes } from 'crypto';
 import mkdirp from 'mkdirp';
-import { cleanup, logger } from './utils';
+import { cleanup, logger, recursiveDelete } from './utils';
 import { UPLOAD_PATH, upload } from './storage';
 import { createStaticPool, WorkerTaskType } from './workerpool';
 
 if (!existsSync(UPLOAD_PATH)) {
   mkdirSync(UPLOAD_PATH);
+} else {
+  recursiveDelete(UPLOAD_PATH);
 }
 
 const staticPool = createStaticPool();

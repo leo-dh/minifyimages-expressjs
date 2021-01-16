@@ -1,4 +1,5 @@
-import { rmdir, unlink } from 'fs';
+import { lstatSync, readdir, rmdir, rmdirSync, unlink, unlinkSync } from 'fs';
+import path from 'path';
 import { logger } from './logger';
 
 function cleanup(inputFilePath: string, outputFolderPath: string): void {
@@ -24,4 +25,19 @@ function cleanup(inputFilePath: string, outputFolderPath: string): void {
   );
 }
 
-export { cleanup };
+function recursiveDelete(urlPath: string): void {
+  readdir(urlPath, (err, files) => {
+    if (err) throw err;
+    files.forEach((file) => {
+      const filepath = path.join(urlPath, file);
+      if (lstatSync(filepath).isDirectory()) {
+        recursiveDelete(filepath);
+        rmdirSync(filepath);
+      } else {
+        unlinkSync(filepath);
+      }
+    });
+  });
+}
+
+export { cleanup, recursiveDelete };
