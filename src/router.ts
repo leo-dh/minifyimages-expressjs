@@ -41,7 +41,7 @@ router.post('/minify', upload.single('image'), async (req, res) => {
   res.json({
     initialSize,
     finalSize,
-    url: `http://${req.headers.host}/tmp/${randomString}/${req.file.originalname}`,
+    url: `${process.env.BASE_URL}/tmp/${randomString}/${req.file.originalname}`,
     filename: req.file.originalname,
   });
 
@@ -75,7 +75,7 @@ router.post('/resize', upload.single('image'), async (req, res) => {
   res.json({
     initialSize,
     finalSize,
-    url: `http://${req.headers.host}/tmp/${randomString}/${req.file.originalname}`,
+    url: `${process.env.BASE_URL}/tmp/${randomString}/${req.file.originalname}`,
     filename: req.file.originalname,
   });
 
